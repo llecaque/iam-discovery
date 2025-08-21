@@ -35,47 +35,6 @@ The process is divided into four main steps. Please execute them in order.
 
 This step uses a shell script to fetch the IAM policies for a predefined list of GCP projects and saves them as individual JSON files in a dated directory.
 
-```bash
-bash gcp-iam-export.sh
-```
-
-# IAM Discovery & Audit Toolchain
-
-This project provides a suite of Python and shell scripts to audit and visualize user and group permissions in Google Cloud Platform (GCP) and Google Workspace.
-
-The workflow is designed to first export all relevant IAM data, process it into a local cache, generate detailed reports, and finally, present the findings in an interactive web dashboard.
-
----
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed and configured:
-
-1.  **Python 3.7+** and `pip`.
-2.  **Google Cloud SDK (`gcloud` CLI):** Authenticated with an administrator account.
-    ```bash
-    gcloud auth login
-    gcloud auth application-default login
-    ```
-3.  **Required Python Libraries:**
-    ```bash
-    pip install Flask google-api-python-client google-auth-httplib2
-    ```
-4.  **Enabled APIs:** Ensure the **Admin SDK API** is enabled in your GCP project.
-    ```bash
-    gcloud services enable admin.googleapis.com
-    ```
-
----
-
-## Workflow & Instructions
-
-The process is divided into four main steps. Please execute them in order.
-
-### Step 1: Export Project IAM Policies
-
-This step uses a shell script to fetch the IAM policies for a predefined list of GCP projects and saves them as individual JSON files in a dated directory.
-
     ```bash
     bash gcp-iam-export.sh
     ```
