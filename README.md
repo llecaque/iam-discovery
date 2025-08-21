@@ -12,16 +12,16 @@ Before you begin, ensure you have the following installed and configured:
 
 1.  **Python 3.7+** and `pip`.
 2.  **Google Cloud SDK (`gcloud` CLI):** Authenticated with an administrator account.
-    ```bash
+    ```
     gcloud auth login
     gcloud auth application-default login --project cmdb-api --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/admin.directory.group.member.readonly,https://www.googleapis.com/auth/admin.directory.user.readonly,https://www.googleapis.com/auth/admin.directory.group.readonly,https://www.googleapis.com/auth/admin.directory.group.member.readonly
     ```
 3.  **Required Python Libraries:**
-    ```bash
+    ```
     pip install Flask google-api-python-client google-auth-httplib2
     ```
 4.  **Enabled APIs:** Ensure the **Admin SDK API** is enabled in your GCP project.
-    ```bash
+    ```
     gcloud services enable admin.googleapis.com
     ```
 
@@ -35,7 +35,7 @@ The process is divided into four main steps. Please execute them in order.
 
 This step uses a shell script to fetch the IAM policies for a predefined list of GCP projects and saves them as individual JSON files in a dated directory.
 
-    ```bash
+    ```
     bash gcp-iam-export.sh
     ```
 
@@ -45,7 +45,7 @@ This will create a new directory (e.g., 2025-08-21) containing the policy files.
 
 This script processes the raw JSON policy files from the previous step and compiles them into a single, optimized iam_cache.json file. This cache is essential for the subsequent steps.
 
-    ```bash
+    ```
     python create_iam_cache.py --policy-dir <date_directory>
     ```
 
@@ -56,7 +56,7 @@ This script uses the iam_cache.json to generate detailed .txt reports for each u
 
 ### A) Audit members of a specific Google Group:
 
-    ```bash
+    ```
     python gdpr-access-audit-local-json.py --group-email <group_email>
     ```
 
@@ -64,7 +64,7 @@ This script uses the iam_cache.json to generate detailed .txt reports for each u
 
 The CSV must contain FirstName and LastName columns.
 
-    ```bash
+    ```
     python gdpr-access-audit-local-json.py --users-csv <path_to_csv>
     ```
 
@@ -74,7 +74,7 @@ This will create an audit directory filled with individual user reports.
 
 This script parses all the .txt files in the audit/ directory and generates several summary JSON files in a json/ directory. These files are the data source for the web dashboard.
 
-    ```bash
+    ```
     python summary.py --audit-dir audit
     ```
 
@@ -82,7 +82,7 @@ This script parses all the .txt files in the audit/ directory and generates seve
 
 Finally, run the Flask web application to visualize all the generated reports in your browser.
 
-    ```bash
+    ```
     python app.py
     ```
 
