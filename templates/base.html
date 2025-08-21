@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP IAM Audit Dashboard</title>
+    <script src="https://cdn.tailwindcss.com" referrerpolicy="strict-origin-when-cross-origin"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" referrerpolicy="strict-origin-when-cross-origin">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
+        .item-active { background-color: #c7d2fe; font-weight: 500; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">GCP IAM Audit Dashboard</h1>
+            <p class="text-slate-500 mt-1">Interactively browse and filter your generated audit reports.</p>
+        </header>
+
+        <div class="mb-6 border-b border-slate-200">
+            <nav class="flex -mb-px space-x-6">
+                <a href="/" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm {% if page == 'effective-access' %}nav-active{% else %}border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300{% endif %}">Effective Access</a>
+                <a href="/users" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm {% if page == 'by-user' %}nav-active{% else %}border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300{% endif %}">By User</a>
+                <a href="/groups" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm {% if page == 'by-group' %}nav-active{% else %}border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300{% endif %}">By Group</a>
+                <a href="/user-details" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm {% if page == 'user-details' %}nav-active{% else %}border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300{% endif %}">User Access Details</a>
+                <div class="relative" x-data="{ open: false }" @mouseleave="open = false">
+                    <button @mouseover="open = true" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1 {% if page.startswith('stats') %}nav-active{% else %}border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300{% endif %}">
+                        <span>Statistics</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="open" x-transition class="absolute z-10 mt-0 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="/stats/users-per-role-project" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Users per Role/Project</a>
+                            <a href="/stats/members-per-group" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Members per Group</a>
+                            <a href="/stats/access-per-group" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Access Count per Group</a>
+                            <a href="/stats/direct-access-count" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Direct Access per User</a>
+                            <a href="/stats/groups-per-user" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Group Count per User</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    {% block page_script %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6 bg-white rounded-lg shadow-sm">
+    <h2 class="text-xl font-semibold mb-4">Effective Access by Role & Project</h2>
+    <input type="text" id="filter-input" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Filter by role, project, or user...">
+    <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Project</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Users with Access</th>
+                </tr>
+            </thead>
+            <tbody id="data-table" class="bg-white divide-y divide-slate-200"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
