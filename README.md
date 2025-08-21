@@ -14,7 +14,7 @@ Before you begin, ensure you have the following installed and configured:
 2.  **Google Cloud SDK (`gcloud` CLI):** Authenticated with an administrator account.
     ```bash
     gcloud auth login
-    gcloud auth application-default login
+    gcloud auth application-default login --project cmdb-api --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/admin.directory.group.member.readonly,https://www.googleapis.com/auth/admin.directory.user.readonly,https://www.googleapis.com/auth/admin.directory.group.readonly,https://www.googleapis.com/auth/admin.directory.group.member.readonly
     ```
 3.  **Required Python Libraries:**
     ```bash
