@@ -12,15 +12,20 @@ Before you begin, ensure you have the following installed and configured:
 
 1.  **Python 3.7+** and `pip`.
 2.  **Google Cloud SDK (`gcloud` CLI):** Authenticated with an administrator account.
+3.  
     ```
     gcloud auth login
     gcloud auth application-default login --project cmdb-api --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/admin.directory.group.member.readonly,https://www.googleapis.com/auth/admin.directory.user.readonly,https://www.googleapis.com/auth/admin.directory.group.readonly,https://www.googleapis.com/auth/admin.directory.group.member.readonly
     ```
-3.  **Required Python Libraries:**
+    
+4.  **Required Python Libraries:**
+   
     ```
     pip install Flask google-api-python-client google-auth-httplib2
     ```
-4.  **Enabled APIs:** Ensure the **Admin SDK API** is enabled in your GCP project.
+    
+6.  **Enabled APIs:** Ensure the **Admin SDK API** is enabled in your GCP project.
+   
     ```
     gcloud services enable admin.googleapis.com
     ```
@@ -35,19 +40,19 @@ The process is divided into four main steps. Please execute them in order.
 
 This step uses a shell script to fetch the IAM policies for a predefined list of GCP projects and saves them as individual JSON files in a dated directory.
 
-    ```
-    bash gcp-iam-export.sh
-    ```
+```
+bash gcp-iam-export.sh
+```
 
 This will create a new directory (e.g., 2025-08-21) containing the policy files.
 
 ### Step 2: Create the Local IAM Cache
 
 This script processes the raw JSON policy files from the previous step and compiles them into a single, optimized iam_cache.json file. This cache is essential for the subsequent steps.
-
-    ```
-    python create_iam_cache.py --policy-dir <date_directory>
-    ```
+    
+```
+python create_iam_cache.py --policy-dir <date_directory>
+```
 
 
 ### Step 3: Generate Individual Audit Reports
@@ -55,18 +60,18 @@ This script processes the raw JSON policy files from the previous step and compi
 This script uses the iam_cache.json to generate detailed .txt reports for each user. It can be run in two modes:
 
 ### A) Audit members of a specific Google Group:
-
-    ```
-    python gdpr-access-audit-local-json.py --group-email <group_email>
-    ```
+    
+```
+python gdpr-access-audit-local-json.py --group-email <group_email>
+```
 
 ### B) Audit users from a CSV file:
 
 The CSV must contain FirstName and LastName columns.
 
-    ```
-    python gdpr-access-audit-local-json.py --users-csv <path_to_csv>
-    ```
+```
+python gdpr-access-audit-local-json.py --users-csv <path_to_csv>
+```
 
 This will create an audit directory filled with individual user reports.
 
@@ -74,17 +79,16 @@ This will create an audit directory filled with individual user reports.
 
 This script parses all the .txt files in the audit/ directory and generates several summary JSON files in a json/ directory. These files are the data source for the web dashboard.
 
-    ```
-    python summary.py --audit-dir audit
-    ```
-
+ ```
+ python summary.py --audit-dir audit
+ ```
 ### Step 5: Launch the Interactive Dashboard
 
 Finally, run the Flask web application to visualize all the generated reports in your browser.
 
-    ```
-    python app.py
-    ```
+```
+python app.py
+```
 
 Once the server is running, open your web browser and navigate to:
 http://127.0.0.1:5000
