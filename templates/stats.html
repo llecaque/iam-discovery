@@ -8,9 +8,8 @@
 </div>
 {% endblock %}
 {% block page_script %}
-    <script src="/static/js/stats.js"></script>
+    <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
     <script>
-        // Passe la clé de la statistique du template Flask au script JS
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof pageSpecificInitialize === 'function') {
                 pageSpecificInitialize("{{ stat_key }}", "{{ title }}");

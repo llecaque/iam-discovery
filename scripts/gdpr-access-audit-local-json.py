@@ -192,7 +192,9 @@ def main():
 
     # --- Determine list of users to process based on mode ---
     users_to_audit = []
+    audit_source_info = ""
     if args.users_csv:
+        audit_source_info = f"Source: CSV file '{args.users_csv}'"
         users_from_csv = read_users_from_csv(args.users_csv)
         if not users_from_csv:
             return
@@ -202,6 +204,7 @@ def main():
                 users_to_audit.append({'email': email, 'FirstName': user_info['FirstName'], 'LastName': user_info['LastName']})
     
     elif args.group_email:
+        audit_source_info = f"Source: Google Group '{args.group_email}'"
         members = get_all_group_members(gws_service, args.group_email)
         for member in members:
             users_to_audit.append({'email': member.get('email'), 'FirstName': None, 'LastName': None})
@@ -229,6 +232,7 @@ def main():
         
         with open(report_filepath, 'w', encoding='utf-8') as f:
             f.write(f"Access Report for: {display_name}\n")
+            f.write(f"{audit_source_info}\n")
             f.write("="*60 + "\n")
 
             # 1. Look up user's direct GCP access in the cache

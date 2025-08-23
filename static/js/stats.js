@@ -18,7 +18,7 @@ function renderSummary(statKey, title, data) {
         return `<h2 class="text-xl font-semibold mb-4">${title}</h2><ul class="space-y-2 text-sm">${itemsHtml}</ul>`;
     };
 
-    const container = document.getElementById('stats-container');
+    const container = document.getElementById('stats-list');
     let dataKey;
     switch(statKey) {
         case 'users-per-role-project': dataKey = 'users_per_role_project_count'; break;
@@ -31,6 +31,6 @@ function renderSummary(statKey, title, data) {
     if (dataKey && data[dataKey]) {
         container.innerHTML = createListHtml(title, data[dataKey]);
     } else {
-        container.innerHTML = `<h2 class="text-xl font-semibold mb-4">${title}</h2><p class="text-sm text-slate-500">Data not available for this statistic.</p>`
+        container.innerHTML = `<p class="text-sm text-slate-500">Data not available for this statistic.</p>`
     }
 }

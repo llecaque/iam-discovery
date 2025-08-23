@@ -5,7 +5,7 @@ async function initialize() {
         const response = await fetch('/api/data');
         if (!response.ok) throw new Error('Network response was not ok.');
         allData = await response.json();
-
+        
         // Déclenche l'initialisation spécifique à la page si elle existe
         const page = document.body.dataset.page;
         if (page === 'effective-access') setupEffectiveAccess();
@@ -151,18 +151,52 @@ function renderUserListForDetails(users) {
 
 function renderEffectiveUserDetails(user) {
     const container = document.getElementById('user-details-container');
-    let detailsHtml = '<li>No effective access details found.</li>';
-    if (allData.userDetails[user] && allData.userDetails[user].length > 0) {
-        detailsHtml = allData.userDetails[user].map(p => `<li><span class="font-semibold">${p.role}</span> on <span class="text-indigo-600">${p.project}</span> (Source: ${p.source})</li>`).join('');
-    }
-    container.innerHTML = `<div class="p-4 border rounded-lg bg-white"><h3 class="text-lg font-semibold text-slate-900">${user}</h3><div><h4 class="font-medium text-slate-700 mt-4">Effective Permissions</h4><ul class="mt-2 list-disc list-inside text-sm text-slate-600 space-y-1">${detailsHtml}</ul></div></div>`;
-}
+    let detailsHtml = '<li class="text-slate-500">No effective access details found.</li>';
+    let logLinksHtml = '<li class="text-slate-500">No projects with access found.</li>';
 
-// Ajoute un attribut de données au body pour identifier la page actuelle
-const path = window.location.pathname;
-if (path === '/') document.body.dataset.page = 'effective-access';
-else if (path === '/users') document.body.dataset.page = 'by-user';
-else if (path === '/groups') document.body.dataset.page = 'by-group';
-else if (path === '/user-details') document.body.dataset.page = 'user-details';
+    if (allData.userDetails[user] && allData.userDetails[user].length > 0) {
+        const userPermissions = allData.userDetails[user];
+        const cursorTimestamp = new Date().toISOString();
+        
+        detailsHtml = userPermissions.map(p => {
+            return `<li class="py-2 border-b border-slate-100">
+                        <span class="font-semibold">${p.role}</span> on 
+                        <span class="text-indigo-600">${p.project}</span> 
+                        <br>
+                        <span class="text-xs text-slate-500">(Source: ${p.source})</span>
+                    </li>`;
+        }).join('');
+
+        const uniqueProjects = [...new Set(userPermissions.map(p => p.project))];
+
+        if (uniqueProjects.length > 0) {
+            logLinksHtml = uniqueProjects.sort().map(project => {
+                const logQuery = `protoPayload.authenticationInfo.principalEmail=\\"${user}\\"`;
+                const encodedQuery = encodeURIComponent(logQuery);
+                const logUrl = `https://console.cloud.google.com/logs/query;query=${encodedQuery};cursorTimestamp=${cursorTimestamp};duration=P30D?project=${project}`;
+                return `<li class="flex items-center justify-between py-2">
+                            <span class="text-indigo-600">${project}</span>
+                            <a href="${logUrl}" target="_blank" title="View user activity logs for this project" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-full">
+                                View Logs
+                            </a>
+                        </li>`;
+            }).join('');
+        }
+    }
+
+    container.innerHTML = `<div class="p-4 border rounded-lg bg-white">
+                               <h3 class="text-lg font-semibold text-slate-900">${user}</h3>
+                               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                   <div>
+                                       <h4 class="font-medium text-slate-700">Effective Permissions</h4>
+                                       <ul class="mt-2 text-sm text-slate-600">${detailsHtml}</ul>
+                                   </div>
+                                   <div>
+                                       <h4 class="font-medium text-slate-700">Project Log Links</h4>
+                                       <ul class="mt-2 text-sm text-slate-600">${logLinksHtml}</ul>
+                                   </div>
+                               </div>
+                           </div>`;
+}
 
 document.addEventListener('DOMContentLoaded', initialize);
