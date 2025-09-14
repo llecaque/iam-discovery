@@ -171,11 +171,26 @@ function renderEffectiveUserDetails(user) {
 
         if (uniqueProjects.length > 0) {
             logLinksHtml = uniqueProjects.sort().map(project => {
-                const logQuery = `protoPayload.authenticationInfo.principalEmail=\\"${user}\\"`;
+                const logQuery = `protoPayload.authenticationInfo.principalEmail="${user}"`;
                 const encodedQuery = encodeURIComponent(logQuery);
                 const logUrl = `https://console.cloud.google.com/logs/query;query=${encodedQuery};cursorTimestamp=${cursorTimestamp};duration=P30D?project=${project}`;
+                
+                // Récupère le nombre de logs depuis les nouvelles données
+                const logCounts = allData.summary.log_counts_by_user || {};
+                const userLogData = logCounts[user] || {};
+                const count = userLogData[project];
+                let countText = '(N/A requests)';
+                if (typeof count === 'number' && count >= 0) {
+                    countText = `(${count} requests)`;
+                } else if (count === -1) {
+                    countText = `(Permission Denied)`;
+                }
+
                 return `<li class="flex items-center justify-between py-2">
-                            <span class="text-indigo-600">${project}</span>
+                            <div>
+                                <span class="text-indigo-600">${project}</span>
+                                <span class="text-xs text-slate-500 ml-2">${countText}</span>
+                            </div>
                             <a href="${logUrl}" target="_blank" title="View user activity logs for this project" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-full">
                                 View Logs
                             </a>
