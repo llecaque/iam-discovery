@@ -1,20 +1,40 @@
 # -*- coding: utf-8 -*-
 """
-Une mini-application Flask pour servir le tableau de bord d'audit IAM en plusieurs pages distinctes.
-Version refactorisée utilisant une structure de projet standard avec des dossiers `templates` et `static`.
+A Flask application to serve the GCP IAM audit dashboard.
+
+This version is refactored to run as a stateless service (e.g., on Cloud Run).
+It reads its data from a Google Cloud Storage (GCS) bucket instead of the
+local filesystem. The bucket name must be provided via the GCS_BUCKET_NAME
+environment variable.
 """
 import os
 import json
 from flask import Flask, jsonify, render_template, abort
+from google.cloud import storage
+from google.api_core.exceptions import NotFound
 
 # ==============================================================================
-# 1. INITIALISATION DE L'APPLICATION FLASK
+# 1. INITIALISATION & CONFIGURATION
 # ==============================================================================
 app = Flask(__name__)
 
+# --- GCS Configuration ---
+# Initialize the GCS client. It will automatically use the runtime
+# service account's credentials when deployed on GCP.
+try:
+    GCS_BUCKET_NAME = os.environ.get('GCS_BUCKET_NAME')
+    storage_client = storage.Client() if GCS_BUCKET_NAME else None
+except Exception as e:
+    # This might fail in a local environment without gcloud setup,
+    # but is essential for cloud deployment.
+    print(f"Warning: Could not initialize GCS client. App will not work without it. Error: {e}")
+    storage_client = None
+    GCS_BUCKET_NAME = None
+
+
 # ==============================================================================
-# 2. ROUTES FLASK
-# Chaque fonction correspond à une page de l'application et rend un template HTML.
+# 2. FLASK ROUTES
+# Each function corresponds to a page of the application.
 # ==============================================================================
 
 @app.route('/')
@@ -36,13 +56,12 @@ def user_details_view():
 @app.route('/stats/<stat_name>')
 def summary_view(stat_name):
     valid_stats = [
-        'users-per-role-project', 'members-per-group', 'access-per-group', 
+        'users-per-role-project', 'members-per-group', 'access-per-group',
         'direct-access-count', 'groups-per-user'
     ]
     if stat_name not in valid_stats:
         abort(404)
-    
-    # Titres pour chaque page de statistiques
+
     titles = {
         'users-per-role-project': 'User Count per (Role@Project)',
         'members-per-group': 'Member Count per Group',
@@ -53,9 +72,16 @@ def summary_view(stat_name):
 
     return render_template('stats.html', page='stats', stat_key=stat_name, title=titles[stat_name])
 
+
 @app.route('/api/data')
 def get_all_data():
-    """Charge et retourne toutes les données JSON nécessaires au tableau de bord."""
+    """
+    [MODIFIED] Loads all necessary JSON data from the GCS bucket and
+    returns it as a single API response.
+    """
+    if not GCS_BUCKET_NAME or not storage_client:
+        abort(500, description="FATAL: GCS_BUCKET_NAME environment variable is not set or client failed to initialize.")
+
     json_files = {
         'effective': 'effective_access_by_role_project.json',
         'direct': 'user_direct_access.json',
@@ -65,21 +91,34 @@ def get_all_data():
         'userDetails': 'user_effective_access_details.json'
     }
     all_json_data = {}
+
+    try:
+        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+    except Exception as e:
+        abort(500, description=f"Could not connect to GCS bucket '{GCS_BUCKET_NAME}'. Error: {e}")
+
     for key, filename in json_files.items():
-        filepath = os.path.join('json', filename)
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                all_json_data[key] = json.load(f)
-        except FileNotFoundError:
-            abort(404, description=f"Fichier de données manquant : {filename}")
+            blob = bucket.blob(filename)
+            data_string = blob.download_as_string()
+            all_json_data[key] = json.loads(data_string)
+        except NotFound:
+            abort(404, description=f"Data file '{filename}' not found in GCS bucket '{GCS_BUCKET_NAME}'.")
         except json.JSONDecodeError:
-            abort(500, description=f"Erreur de format dans le fichier : {filename}")
+            abort(500, description=f"Format error in data file: {filename}")
+        except Exception as e:
+            abort(500, description=f"An unexpected error occurred while reading '{filename}': {e}")
+
     return jsonify(all_json_data)
 
 # ==============================================================================
-# 3. POINT D'ENTRÉE DE L'APPLICATION
+# 3. APPLICATION ENTRY POINT
 # ==============================================================================
 if __name__ == '__main__':
-    print("Lancement du serveur Flask...")
-    print("Ouvrez votre navigateur et allez sur http://127.0.0.1:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Determine the port - use PORT from environment for Cloud Run, or 8080 for local
+    PORT = int(os.environ.get("PORT", 8080))
+    print("Starting Flask server for IAM Dashboard...")
+    print(f"Navigate to https://127.0.0.1:{PORT} in your browser.")
+    # Use ssl_context='adhoc' to enable a self-signed HTTPS certificate for local development
+    app.run(host='0.0.0.0', port=PORT, debug=True, ssl_context='adhoc')
+
